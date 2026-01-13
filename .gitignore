@@ -1,0 +1,77 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# =========================
+# Virtual Environments
+# =========================
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# =========================
+# Environment Variables
+# =========================
+.env
+.env.*
+*.env
+
+# =========================
+# Selenium / Test Artifacts
+# =========================
+screenshots/
+reports/
+allure-results/
+allure-report/
+test-results/
+html-report/
+logs/
+*.log
+
+# =========================
+# Pytest / Test Cache
+# =========================
+.pytest_cache/
+.coverage
+coverage.xml
+
+# =========================
+# IDE / Editor
+# =========================
+.vscode/
+.idea/
+*.iml
+
+# =========================
+# OS Files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Browser Drivers (Optional)
+# =========================
+chromedriver
+chromedriver.exe
+geckodriver
+geckodriver.exe
+msedgedriver
+msedgedriver.exe
+
+# =========================
+# Temporary / Backup Files
+# =========================
+*.swp
+*.swo
+*~
