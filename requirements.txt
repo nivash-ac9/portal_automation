@@ -1,0 +1,5 @@
+selenium==4.17.2
+webdriver-manager==4.0.2
+pandas==2.2.2
+
+python-dotenv~=1.2.1
