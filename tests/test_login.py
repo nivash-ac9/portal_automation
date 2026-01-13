@@ -18,7 +18,7 @@ logger = get_logger(TEST_NAME,"login_log")
 logger.info("===== LOGIN TEST STARTED =====")
 
 driver = get_driver()
-driver.get("https://dev-portal.ac9ai.com/login")
+driver.get(os.getenv("LOGIN_URL"))
 
 locator_reader = LocatorReader(LOCATOR_CSV,logger)
 login_page = LoginPage(driver, locator_reader)
@@ -27,11 +27,12 @@ assert login_page.is_page_displayed(), "Login page not displayed"
 
 df = GoogleSheetReader(LOGIN_DATA_CSV).read_data()
 
-actuals, statuses = [], []
+actuals, statuses,passed_ids,failed_ids = [], [],[],[]
 passed = failed = 0
 
 for _, row in df.iterrows():
     row_dict = row.to_dict()
+    test_id = row_dict.get("test_id")
     logger.info(f"Executing test case: {row_dict}")
 
     login_page.login_dynamic(row_dict)
@@ -45,16 +46,18 @@ for _, row in df.iterrows():
         actuals.append(row_dict["expected_result"])
         statuses.append("PASS")
         passed += 1
+        passed_ids.append(test_id)
         logger.info("TEST PASSED")
     else:
         actuals.append("Missing: " + ",".join(missing))
         statuses.append("FAIL")
         failed += 1
+        failed_ids.append(test_id)
         logger.error("TEST FAILED")
 
 
 CSVWriter.write_results(TEST_NAME, df, actuals, statuses)
-CSVWriter.write_summary(TEST_NAME, len(df), passed, failed)
+CSVWriter.write_summary(TEST_NAME, len(df), passed, failed,passed_ids,failed_ids)
 
 driver.quit()
 logger.info("===== LOGIN TEST COMPLETED =====")

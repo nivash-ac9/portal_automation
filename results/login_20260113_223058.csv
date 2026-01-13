@@ -1,0 +1,7 @@
+test_id,username,password,expected_result,actual_result,status
+login_01,test-tenant-admin-us@abovecloud9.ai,Abovecloud@ac,error_msg,error_msg,PASS
+login_02,test-tenant-us@abovecloud9.ai,,required_password,required_password,PASS
+login_03,,Abovecloud@ac9,required_email,required_email,PASS
+login_04,test-tenant-us@abovecloud9.ai,Abovecloud@ac9,error_msg,error_msg,PASS
+login_05,,,error_msg,error_msg,PASS
+login_06,test-tenant-admin-us@abovecloud9.ai,Abovecloud@ac9,AOL_icon_dashboard,AOL_icon_dashboard,PASS

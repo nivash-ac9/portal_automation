@@ -8,7 +8,7 @@ class LoginPage(BasePage):
     PAGE_NAME = "login"
 
     def is_page_displayed(self):
-        return super().is_page_displayed(self.PAGE_NAME, "login_btn")
+        return super().is_page_displayed(self.PAGE_NAME, "Login_title")
 
     def reset_form(self):
         self.logger.info("Resetting login form")
@@ -51,7 +51,7 @@ class LoginPage(BasePage):
             self.logger.info("Clicking login button")
             btn.click()
 
-        #  MANUAL + DYNAMIC LOGIN
+        #  MANUAL LOGIN
     def login_manual_dynamic(self, login_data: dict):
 
 

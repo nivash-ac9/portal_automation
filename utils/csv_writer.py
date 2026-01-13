@@ -25,7 +25,7 @@ class CSVWriter:
                 )
 
     @staticmethod
-    def write_summary(page, total, passed, failed):
+    def write_summary(page, total, passed, failed, passed_ids, failed_ids):
         os.makedirs(SUMMARY_DIR, exist_ok=True)
 
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -36,5 +36,18 @@ class CSVWriter:
 
         with open(path, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
-            writer.writerow(["Total", "Passed", "Failed"])
-            writer.writerow([total, passed, failed])
+            writer.writerow([
+                "Total",
+                "Passed",
+                "Failed",
+                "Passed_Testcase_IDs",
+                "Failed_Testcase_IDs"
+            ])
+            writer.writerow([
+                total,
+                passed,
+                failed,
+                ", ".join(filter(None, passed_ids)),
+                ", ".join(filter(None, failed_ids))
+            ])
+

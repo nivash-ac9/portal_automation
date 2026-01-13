@@ -1,6 +1,6 @@
 import os
 
-# Absolute path of project root (portal)
+# Absolute path of project root
 PROJECT_ROOT = os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))
 )
