@@ -23,9 +23,10 @@ venv.bak/
 # =========================
 # Environment Variables
 # =========================
+env/
+.venv/
 .env
-.env.*
-*.env
+
 
 # =========================
 # Selenium / Test Artifacts
