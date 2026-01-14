@@ -32,7 +32,7 @@ logger.info("==============================================")
 # DRIVER SETUP
 # --------------------------------------------------
 driver = get_driver()
-driver.get("https://dev-portal.ac9ai.com/login")
+driver.get(os.getenv("LOGIN_URL"))
 
 locator_reader = LocatorReader(LOCATOR_CSV, logger)
 
