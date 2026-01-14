@@ -3,8 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from datetime import datetime
-from datetime import time as dt_time
+import re
 import time
 
 
@@ -22,13 +21,13 @@ class LiveDarshanPage(BasePage):
     # ---------------- PAGE DISPLAY ----------------
     def is_page_displayed(self, page=None, element_name=None):
         self.logger.info("Waiting for Live Darshan page to load...")
-        return self.find(page, element_name) is not None
+        return super().is_page_displayed(page, element_name)
 
     # ==================================================
     # CREATE FLOW
     # ==================================================
     def click_create_now(self):
-        btn = self.find(self.LIST_PAGE, "create_now_btn")
+        btn = self.find(self.LIST_PAGE, "create_now_btn",visible=False)
         if btn:
             btn.click()
             time.sleep(1)
@@ -41,34 +40,31 @@ class LiveDarshanPage(BasePage):
                 continue
 
             locator_name = f"{col}_input"
-            el = self.find(self.CREATE_PAGE, locator_name)
+            el = self.find(self.CREATE_PAGE, locator_name,visible=False)
 
             if not el:
                 continue
-
+            if col == "start_time":
+                self.fill_time_picker(val)
+                continue
+            if col == "timezone":
+                el.send_keys(Keys.ENTER)
+                time.sleep(0.4)
+                # Close dropdown using BODY
+                self.driver.find_element(By.TAG_NAME, "body").send_keys(Keys.ESCAPE)
+                time.sleep(0.3)
+                continue
             el.click()
             time.sleep(0.2)
             el.send_keys(Keys.CONTROL, "a")
             el.send_keys(Keys.DELETE)
             el.send_keys(str(val))
             time.sleep(0.3)
-
-            if col == "timezone":
-                el.send_keys(Keys.ENTER)
-                time.sleep(0.4)
-
-                # DO NOT use el again (it is stale now)
-                # Close dropdown using BODY
-                self.driver.find_element(By.TAG_NAME, "body").send_keys(Keys.ESCAPE)
-                time.sleep(0.3)
-
-                continue
-
             el.send_keys(Keys.TAB)
             time.sleep(0.2)
 
     def submit_create(self):
-        btn = self.find(self.CREATE_PAGE, "create_btn")
+        btn = self.find(self.CREATE_PAGE, "create_btn",visible=False)
         if btn:
             btn.click()
             time.sleep(1)
@@ -79,7 +75,7 @@ class LiveDarshanPage(BasePage):
         return self.verify_expected_locators(self.CREATE_PAGE, expected)
 
     def is_create_modal_open(self):
-        return self.find(self.CREATE_PAGE, "create_btn") is not None
+        return self.find(self.CREATE_PAGE, "create_btn",visible=False) is not None
 
     # ==================================================
     #  EDIT FLOW
@@ -168,7 +164,7 @@ class LiveDarshanPage(BasePage):
 
 
     def submit_edit(self):
-        btn = self.find(self.EDIT_PAGE, "save_btn")
+        btn = self.find(self.EDIT_PAGE, "save_btn",visible=False)
         if not btn:
             raise Exception("Edit Save button not found")
 
@@ -189,7 +185,7 @@ class LiveDarshanPage(BasePage):
     # ==================================================
     def go_to_page(self, page_no):
         locator_name = f"pagination_{page_no}"
-        el = self.find(self.LIST_PAGE, locator_name)
+        el = self.find(self.LIST_PAGE, locator_name,visible=False)
         if el:
             el.click()
             time.sleep(1)
@@ -197,20 +193,53 @@ class LiveDarshanPage(BasePage):
     # ==================================================
     # MANTINE TIME HANDLER
     # ==================================================
-    def set_mantine_time_input(self, el, time_24):
-        ui_time = datetime.strptime(time_24, "%H:%M").strftime("%I:%M %p")
-        el.click()
-        time.sleep(0.2)
+    def fill_time_picker(self, time_str):
+        match = re.match(r'(\d{1,2}):(\d{2})\s*(.+)?', time_str)
+        if not match:
+            self.logger.error(f"Invalid time: {time_str}")
+            return
+        hour_24, minute = int(match.group(1)), int(match.group(2))
 
-        el.send_keys(Keys.CONTROL, "a")
-        el.send_keys(Keys.DELETE)
+        hour_12 = hour_24 % 12 or 12
+        am_pm = "PM" if hour_24 >= 12 else "AM"
 
-        for ch in ui_time:
-            el.send_keys(ch)
-            time.sleep(0.05)
+        self.logger.info(f"Setting time: {hour_12}:{minute} {am_pm}")
 
-        el.send_keys(Keys.TAB)
+        # Click to open picker
+        time_input = self.find("create_livedarshan", "start_time_input")
+        if time_input:
+            time_input.click()
+            time.sleep(1)
+
+        # Since buttons have no text, try clicking input fields directly (common pattern)
+        # Strategy 1: Direct hour/minute input fields in picker
+        hour_input = self.find("create_livedarshan", "start_time_hour_input", timeout=3) or \
+                     self.find("create_livedarshan", "time_hour_input", timeout=3)
+
+        if not hour_input:
+            # Fallback: SendKeys directly to main input (works for many pickers)
+            time_input.clear()
+            time_input.send_keys(f"{hour_12:02d}:{minute:02d}")
+            time_input.send_keys(Keys.ENTER)
+            self.logger.info("Used direct input method")
+            return
+
+        # Clear and type hour
+        hour_input.clear()
+        hour_input.send_keys(str(hour_12))
         time.sleep(0.3)
+
+        # Minute input
+        minute_input = self.find("create_livedarshan", "start_time_minute_input", timeout=3) or \
+                       self.find("create_livedarshan", "time_minute_input", timeout=3)
+
+        if minute_input:
+            minute_input.clear()
+            minute_input.send_keys(str(minute))
+            time.sleep(0.3)
+
+        # Close picker
+        self.driver.find_element(By.TAG_NAME, "body").send_keys(Keys.ESCAPE)
 
     ## Safe to clear the previous data on field
     def clear_mantine_input(self, el):

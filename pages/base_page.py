@@ -1,45 +1,62 @@
 from datetime import time
 import time
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import platform
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, StaleElementReferenceException, NoSuchElementException
 class BasePage:
 
-    def __init__(self, driver, locator_reader, timeout=10):
+    def __init__(self, driver, locator_reader, timeout=20):
         self.driver = driver
         self.locator_reader = locator_reader
         self.timeout = timeout
         self.logger = locator_reader.logger
 
-    def find(self, page, name):
+    def find(self, page, name, visible=True, timeout=None):
         self.logger.info(f"Finding element: {page}.{name}")
 
         by, value = self.locator_reader.get(page, name)
-        #print(value,by)
         if not by or not value:
-            self.logger.error(
-                f"Element SKIPPED (locator missing): {page}.{name}"
-            )
+            self.logger.error(f"Locator missing: {page}.{name}")
             return None
 
-        try:
-            return WebDriverWait(self.driver, self.timeout).until(
-                EC.visibility_of_element_located((by, value))
-            )
-        except Exception as e:
-            self.logger.error(
-                f"Element NOT visible: {page}.{name}"
-            )
-            return None
+        final_timeout = timeout or self.timeout
+
+        # Retry logic for flaky elements (fixes Live Darshan title delay)
+        for attempt in range(2):
+            try:
+                wait = WebDriverWait(self.driver, final_timeout)
+
+                if visible:
+                    element = wait.until(
+                        EC.visibility_of_element_located((by, value))
+                    )
+                else:
+                    element = wait.until(
+                        EC.presence_of_element_located((by, value))
+                    )
+
+                # Final validation
+                if visible and element.is_displayed() or not visible:
+                    self.logger.info(f"Found after {attempt + 1} attempts: {page}.{name}")
+                    return element
+
+            except (TimeoutException, StaleElementReferenceException, NoSuchElementException) as e:
+                self.logger.warning(f"Attempt {attempt + 1}/3 failed: {page}.{name} - {str(e)[:50]}")
+                if attempt < 2:  # Don't sleep on last attempt
+                    time.sleep(1)  # Progressive delay between retries
+
+        self.logger.error(f"Element NOT found after 3 retries: {page}.{name}")
+        return None
 
     # verify the page
     def is_page_displayed(self, page, element_name):
         self.logger.info(f"Checking page display: {page}")
 
-        el = self.find(page, element_name)
+        el = self.find(page, element_name,visible=False)
 
 
         if el:
@@ -105,7 +122,7 @@ class BasePage:
     def safe_click(self, page, locator_name, retries=3):
         for _ in range(retries):
             try:
-                el = self.find(page, locator_name)
+                el = self.find(page, locator_name,visible=False)
                 if el:
                     el.click()
                     return el

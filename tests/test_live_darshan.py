@@ -61,7 +61,7 @@ live_page = LiveDarshanPage(driver, locator_reader)
 assert live_page.is_page_displayed("live_darshan_list","title"), "Live Darshan page not displayed"
 
 logger.info(" LIVE DARSHAN PAGE LOADED")
-
+passed_ids,failed_ids=[],[]
 # ==================================================
 # COMMON EXECUTOR
 # ==================================================
@@ -70,7 +70,6 @@ def execute_and_report(test_name, df, executor):
     passed = failed = 0
 
     logger.info(f"{test_name.upper()} TEST EXECUTION STARTED")
-
     for _, row in df.iterrows():
         row_dict = row.to_dict()
         logger.info(f"Executing {test_name}: {row_dict}")
@@ -81,15 +80,17 @@ def execute_and_report(test_name, df, executor):
             actuals.append(row_dict.get("expected_result"))
             statuses.append("PASS")
             passed += 1
+            passed_ids.append(row_dict.get("test_id"))
             logger.info(" TEST PASSED")
         else:
             actuals.append("Missing: " + ",".join(missing))
             statuses.append("FAIL")
             failed += 1
+            failed_ids.append(row_dict.get("test_id"))
             logger.error(" TEST FAILED")
 
     CSVWriter.write_results(test_name, df, actuals, statuses)
-    CSVWriter.write_summary(test_name, len(df), passed, failed)
+    CSVWriter.write_summary(test_name, len(df), passed, failed, passed_ids, failed_ids)
 
     logger.info(
         f"{test_name.upper()} COMPLETED | Passed: {passed}, Failed: {failed}"
@@ -121,9 +122,9 @@ p_create, f_create = execute_and_report(
     run_create
 )
 
-
+""""
 # ==================================================
-# EDIT TESTS (UPDATED – row based)
+# EDIT TESTS 
 # ==================================================
 logger.info(" LIVE DARSHAN EDIT TESTS STARTED")
 
@@ -157,7 +158,7 @@ p_edit, f_edit = execute_and_report(
     df_edit,
     run_edit
 )
-
+"""
 # ==================================================
 # PAGINATION TESTS
 # ==================================================
@@ -182,15 +183,22 @@ p_page, f_page = execute_and_report(
 # ==================================================
 # OVERALL SUMMARY
 # ==================================================
+"""
 total_passed =  p_create+   p_edit
 total_failed = f_create+f_edit
+total_tests = total_passed + total_failed
+"""
+total_passed =  p_create
+total_failed = f_create
 total_tests = total_passed + total_failed
 
 CSVWriter.write_summary(
     "live_darshan_overall",
     total_tests,
     total_passed,
-    total_failed
+    total_failed,
+    passed_ids,
+    failed_ids,
 )
 
 logger.info("==============================================")

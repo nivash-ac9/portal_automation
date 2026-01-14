@@ -14,7 +14,7 @@ class LoginPage(BasePage):
         self.logger.info("Resetting login form")
         for name in self.locator_reader.get_page_inputs(self.PAGE_NAME):
             try:
-                el = self.find(self.PAGE_NAME, name)
+                el = self.find(self.PAGE_NAME, name,visible=False)
                 if not el:
                     continue
                 el.click()
@@ -36,7 +36,7 @@ class LoginPage(BasePage):
 
             locator_name = f"{col}_input"
 
-            el = self.find(self.PAGE_NAME, locator_name)
+            el = self.find(self.PAGE_NAME, locator_name,visible=False)
             if not el:
                 self.logger.warning(f"Field skipped: {locator_name}")
                 continue
@@ -46,7 +46,7 @@ class LoginPage(BasePage):
             el.clear()
             el.send_keys(str(val))
 
-        btn = self.find(self.PAGE_NAME, "login_btn")
+        btn = self.find(self.PAGE_NAME, "login_btn",visible=False)
         if btn:
             self.logger.info("Clicking login button")
             btn.click()
@@ -65,7 +65,7 @@ class LoginPage(BasePage):
                 continue
 
             locator_name = f"{field}_input"
-            el = self.find(self.PAGE_NAME, locator_name)
+            el = self.find(self.PAGE_NAME, locator_name,visible=False)
 
             if not el:
                 self.logger.warning(f"Login field skipped (locator missing): {locator_name}")
@@ -76,7 +76,7 @@ class LoginPage(BasePage):
             self._select_all(el)
             el.send_keys(str(value))
 
-        btn = self.find(self.PAGE_NAME, "login_btn")
+        btn = self.find(self.PAGE_NAME, "login_btn",visible=False)
         if btn:
             self.logger.info("Clicking login button")
             btn.click()
